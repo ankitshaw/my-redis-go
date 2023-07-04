@@ -67,7 +67,21 @@ func (server *Server) requestHandler(conn net.Conn) {
 		msg := buf[:n]
 
 		// echo := "HTTP/1.1 200 OK\r\n\r\n" + string(msg) + "\r\n"
-		resp.ParseRequest(msg)
+		commands, totalBytes := resp.ParseRequest(msg)
+
+		for _, command := range commands {
+			dataType, err := operations.ExecuteCommand(command)
+			if err != resp.EmptyRedisError {
+				conn.Write([]byte(err.ToString() + "\n"))
+			} else {
+				if dataType == nil {
+					conn.Write([]byte("(nil)" + "\n"))
+				} else {
+					conn.Write([]byte(dataType.ToString() + "\n"))
+				}
+			}
+		}
+
 		// conn.Write([]byte(echo))
 		log.Println("Done Writing!")
 		fmt.Println(string(msg))

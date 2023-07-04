@@ -215,11 +215,32 @@ func parseArray(bytes []byte) (*Array, int) {
 	return array, arrReadLen + readLen
 }
 
-func ParseRequest(bytes []byte) (err RedisError) {
-	arr, out := parseArray(bytes)
-	str, out := parseBulkString(bytes)
-	str2, out := parseSimpleString(bytes)
-	intt, out := parseInteger(bytes)
-	println(arr, str, str2, intt, out)
-	return NewRedisError("", "")
+
+func getNextArrayStartIndex(bytes []byte) int {
+	for i := 1; i < len(bytes); i++ {
+		if bytes[i] == arrayStartByte {
+			return i
+		}
+	}
+	return len(bytes)
+}
+
+func ParseRequest(bytes []byte) (err RedisError) (command []Array, totalBytes int) {
+
+	commands = make([]Array, 0)
+	totalBytesRead := 0
+
+	for len(bytes) > 0 {
+		asbIndex := getNextArrayStartIndex(bytes)
+		command, read := parseArray(bytes[0:asbIndex])
+		if read > 0 {
+			commands = append(commands, *command)
+			// Reset bytest
+			bytes = bytes[read:]
+			totalBytesRead += read
+		} else {
+			break
+		}
+	}
+	return commands, totalBytesRead
 }
