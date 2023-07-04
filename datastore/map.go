@@ -1,26 +1,23 @@
-package storage
+package datastore
 
 import (
 	"sync"
-	"time"
 )
 
-type ConcurrentMap struct{
+type ConcurrentMap struct {
 	sync.RWMutex
 	datastore map[string]string
 }
 
 func NewKeyValueStore() *ConcurrentMap {
-	kvStore := ConcurrentMap{
-		datastore: make(map[string]string)
-	}
+	kvStore := ConcurrentMap{datastore: make(map[string]string)}
 	return &kvStore
 }
 
 func (kvStore *ConcurrentMap) Load(key string) (value string, ok bool) {
 	kvStore.RLock()
 	defer kvStore.RUnlock()
-	result, ok := gcm.internal[key]
+	result, ok := kvStore.datastore[key]
 	return result, ok
 }
 
@@ -35,8 +32,8 @@ func (kvStore *ConcurrentMap) Delete(key string) bool {
 	kvStore.RLock()
 	defer kvStore.RUnlock()
 
-	_ , ok := kvStore.datastore[key]
-	if ok == false{
+	_, ok := kvStore.datastore[key]
+	if !ok {
 		return false
 	}
 

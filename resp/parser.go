@@ -215,7 +215,6 @@ func parseArray(bytes []byte) (*Array, int) {
 	return array, arrReadLen + readLen
 }
 
-
 func getNextArrayStartIndex(bytes []byte) int {
 	for i := 1; i < len(bytes); i++ {
 		if bytes[i] == arrayStartByte {
@@ -225,9 +224,8 @@ func getNextArrayStartIndex(bytes []byte) int {
 	return len(bytes)
 }
 
-func ParseRequest(bytes []byte) (err RedisError) (command []Array, totalBytes int) {
-
-	commands = make([]Array, 0)
+func ParseRequest(bytes []byte) (command []Array, totalBytes int) {
+	commands := make([]Array, 0)
 	totalBytesRead := 0
 
 	for len(bytes) > 0 {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"my-redis-go/operations"
 	"my-redis-go/resp"
 	"net"
 )
@@ -58,32 +59,40 @@ func (server *Server) establishConnection() {
 
 func (server *Server) requestHandler(conn net.Conn) {
 	defer conn.Close()
-	buf := make([]byte, 2048)
 	for {
+		buf := make([]byte, 2048)
 		n, err := conn.Read(buf)
 		if err != nil {
+			print("hello error")
 			log.Fatal(err)
 		}
 		msg := buf[:n]
-
-		// echo := "HTTP/1.1 200 OK\r\n\r\n" + string(msg) + "\r\n"
-		commands, totalBytes := resp.ParseRequest(msg)
-
+		// print("hello")
+		// print(string(msg))
+		// echo := "+OK\r\n"
+		commands, _ := resp.ParseRequest(msg)
 		for _, command := range commands {
 			dataType, err := operations.ExecuteCommand(command)
+			fmt.Println(dataType.ToString())
 			if err != resp.EmptyRedisError {
+				fmt.Println("else error")
 				conn.Write([]byte(err.ToString() + "\n"))
 			} else {
+				fmt.Println("else")
 				if dataType == nil {
+					fmt.Println("else nil")
 					conn.Write([]byte("(nil)" + "\n"))
 				} else {
-					conn.Write([]byte(dataType.ToString() + "\n"))
+					fmt.Println("elsewow")
+					out := fmt.Sprintf("$%d\r\n%s\r\n", len(dataType.ToString()), dataType.ToString())
+					fmt.Println(out)
+					conn.Write([]byte(out))
 				}
 			}
 		}
 
 		// conn.Write([]byte(echo))
-		log.Println("Done Writing!")
+		// log.Println("Done Writing!")
 		fmt.Println(string(msg))
 	}
 }
